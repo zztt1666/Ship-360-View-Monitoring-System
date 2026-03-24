@@ -1,6 +1,6 @@
 # Ship 360 View Monitoring System
 
-这是一个基于 Python 和 OpenCV 的多相机环视处理项目，当前仓库中的代码主要包含以下能力：
+这是一个基于 Python + OpenCV + PyQt5 的船舶环视监控项目，围绕六路相机鸟瞰拼接主链路构建，核心能力包括：
 
 - 相机标定
 - 鱼眼去畸变
@@ -8,9 +8,6 @@
 - 多视角鸟瞰图拼接
 - 权重矩阵与遮罩生成
 - 多线程实时预览
-
-从当前代码结构来看，这个仓库的核心内容仍然是一个“环视 / Bird's-eye View”处理系统，因此首页说明应该围绕现有脚本和目录来写，而不是依赖外部仓库介绍。
-
 
 # Project Structure
 
@@ -25,11 +22,14 @@
 - `yaml/`：相机参数和投影参数
 - `images/`：示例输入图像
 
-补充说明：
+项目通道命名采用六路方案：
 
-- 当前实时主流程仍然是四路拼接：`front / back / left / right`
-- 但参数配置中已经能看到 `front_left / front_right` 以及 `boat_w / boat_h` 这类扩展痕迹
-- 这说明仓库内容已经做过面向当前项目场景的二次调整，不应再完全按原始上游 demo 理解
+- `front`
+- `front_left`
+- `front_right`
+- `left`
+- `right`
+- `back`
 
 
 # Environment Setup
@@ -110,9 +110,9 @@ python run_live_demo.py
 
 开始实时预览前，请先确认：
 
-- `yaml/front.yaml`、`yaml/back.yaml`、`yaml/left.yaml`、`yaml/right.yaml` 中已经有可用的 `camera_matrix`、`dist_coeffs` 和 `project_matrix`
+- `yaml/front.yaml`、`yaml/front_left.yaml`、`yaml/front_right.yaml`、`yaml/left.yaml`、`yaml/right.yaml`、`yaml/back.yaml` 中已经有可用的 `camera_matrix`、`dist_coeffs` 和 `project_matrix`
 - 项目根目录下已经生成了 `weights.png` 和 `masks.png`
-- [run_live_demo.py](/Users/apple/Documents/dev/projectsCode/Ship-360-View-Monitoring-System-main/run_live_demo.py) 里的 `camera_ids` 和 `flip_methods` 已按你的设备实际情况修改
+- [surround_view/param_settings.py](/Users/apple/Documents/dev/projectsCode/Ship-360-View-Monitoring-System-main/surround_view/param_settings.py) 里的相机名称顺序与 [run_live_demo.py](/Users/apple/Documents/dev/projectsCode/Ship-360-View-Monitoring-System-main/run_live_demo.py) 的 `camera_ids`、`flip_methods` 一一对齐
 
 
 # Real-time Pipeline
@@ -126,10 +126,10 @@ python run_live_demo.py
    对每一路图像执行去畸变、投影和方向统一。
 
 3. `ProjectedImageBuffer`
-   等待四路处理线程都完成当前帧，再把这一组投影图一起交给下一阶段。
+   等待各处理线程都完成当前帧，再把这一组投影图一起交给下一阶段。
 
 4. `BirdView`
-   对四路投影图做亮度平衡、拼接、白平衡和车辆区域覆盖，生成最终鸟瞰图。
+   对多路投影图做亮度平衡、拼接、白平衡和主体区域覆盖，生成最终鸟瞰图。
 
 5. 主线程
    调用 `cv2.imshow()` 实时显示拼接结果，并打印各线程 FPS。

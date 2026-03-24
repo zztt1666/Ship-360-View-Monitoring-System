@@ -84,7 +84,7 @@ python test_cameras.py
 指定设备并设置预览分辨率：
 
 ```bash
-python test_cameras.py --devices 0 1 2 3 -r 1280x720
+python test_cameras.py --devices 0 1 2 3 4 5 -r 1280x720
 ```
 
 
@@ -138,14 +138,14 @@ python run_live_demo.py
 
 注意：
 
-- 运行前需要先准备好四路 yaml 的标定参数和投影矩阵
+- 运行前需要先准备好多路 yaml 的标定参数和投影矩阵（六路项目建议至少包含 `front/front_left/front_right/left/right/back`）
 - 还需要先生成 `weights.png` 和 `masks.png`
-- `run_live_demo.py` 中默认写死了 `camera_ids = [4, 3, 5, 6]`，通常需要根据你的实际设备号修改
+- [surround_view/param_settings.py](/Users/apple/Documents/dev/projectsCode/Ship-360-View-Monitoring-System-main/surround_view/param_settings.py) 里的相机名称顺序，必须与 [run_live_demo.py](/Users/apple/Documents/dev/projectsCode/Ship-360-View-Monitoring-System-main/run_live_demo.py) 中 `camera_ids`、`flip_methods` 的顺序严格对齐
 
 
 ## 6. 运行环境说明
 
-本项目更适合在 Linux 环境运行，文档中原作者使用的是 Ubuntu。
+本项目更适合在 Linux 环境运行（推荐 Ubuntu）。
 
 如果你只是做：
 

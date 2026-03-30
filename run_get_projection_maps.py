@@ -11,9 +11,21 @@ from surround_view import FisheyeCameraModel, PointSelector, display_image
 import surround_view.param_settings as settings
 
 
-def get_projection_map(camera_model, image):
-    # 先做去畸变，后续在去畸变图像上手动选点
-    und_image = camera_model.undistort(image)
+def resolve_image_file(base_dir, camera_name):
+    exts = (".png", ".jpg", ".jpeg")
+    for ext in exts:
+        image_file = os.path.join(base_dir, camera_name + ext)
+        if os.path.isfile(image_file):
+            return image_file
+    tried = ", ".join([camera_name + ext for ext in exts])
+    raise FileNotFoundError(
+        "Cannot find image for camera '{}'. Tried: {}".format(camera_name, tried)
+    )
+
+
+def get_projection_map(camera_model, image, already_undistorted=False):
+    # 默认先做去畸变；如果输入图已去畸变，则直接使用
+    und_image = image if already_undistorted else camera_model.undistort(image)
     name = camera_model.camera_name
     gui = PointSelector(und_image, title=name)
 
@@ -56,6 +68,8 @@ def main():
     # 去畸变后的平移量，用于调整画面中心位置
     parser.add_argument("-shift", nargs="+", default=None,
                         help="shift the undistorted image")
+    parser.add_argument("--already_undistorted", action="store_true",
+                        help="set true if input image is already undistorted")
     args = parser.parse_args()
 
     if args.scale is not None:
@@ -72,13 +86,14 @@ def main():
 
     # 读取对应相机的标定参数和原始图像
     camera_file = os.path.join(os.getcwd(), "yaml", camera_name + ".yaml")
-    image_file = os.path.join(os.getcwd(), "images", camera_name + ".png")
+    images_dir = os.path.join(os.getcwd(), "images")
+    image_file = resolve_image_file(images_dir, camera_name)
     image = cv2.imread(image_file)
     camera = FisheyeCameraModel(camera_file, camera_name)
 
     # scale / shift 会影响去畸变后的可视区域
     camera.set_scale_and_shift(scale, shift)
-    success = get_projection_map(camera, image)
+    success = get_projection_map(camera, image, already_undistorted=args.already_undistorted)
     if success:
         # 成功后把投影矩阵写回对应 yaml
         print("saving projection matrix to yaml")

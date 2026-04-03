@@ -92,9 +92,9 @@ project_keypoints = {
               (shift_h + 660, shift_w + 160)]
 }
 
-# 中间覆盖图
-# 当前代码仍沿用变量名 car_image，但语义上它只是“主体顶视图占位图”
-car_image_path = os.path.join(os.getcwd(), "images", "car.png")
+# 中间覆盖图（使用项目当前 ship 图标）
+# 变量名沿用 car_image 仅为兼容现有调用代码
+car_image_path = os.path.join(os.getcwd(), "images", "ship.jpg")
 car_image = cv2.imread(car_image_path)
 if car_image is None:
     raise FileNotFoundError("Cannot find center overlay image: {}".format(car_image_path))

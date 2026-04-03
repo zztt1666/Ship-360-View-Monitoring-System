@@ -45,11 +45,11 @@ def get_projection_map(camera_model, image, already_undistorted=False):
         # 显示投影后的鸟瞰图，确认效果
         ret = display_image("Bird's View", proj_image)
         if ret > 0:
-            return True
+            return True, und_image, proj_image
         if ret < 0:
             cv2.destroyAllWindows()
 
-    return False
+    return False, und_image, None
 
 
 def main():
@@ -70,6 +70,10 @@ def main():
                         help="shift the undistorted image")
     parser.add_argument("--already_undistorted", action="store_true",
                         help="set true if input image is already undistorted")
+    parser.add_argument("--image_dir", default="images",
+                        help="directory containing input images, default: images")
+    parser.add_argument("--save_result_dir", default="outputs/projection_calibration",
+                        help="directory to save undistorted/projected result images")
     args = parser.parse_args()
 
     if args.scale is not None:
@@ -86,18 +90,28 @@ def main():
 
     # 读取对应相机的标定参数和原始图像
     camera_file = os.path.join(os.getcwd(), "yaml", camera_name + ".yaml")
-    images_dir = os.path.join(os.getcwd(), "images")
+    images_dir = os.path.join(os.getcwd(), args.image_dir)
     image_file = resolve_image_file(images_dir, camera_name)
     image = cv2.imread(image_file)
     camera = FisheyeCameraModel(camera_file, camera_name)
 
     # scale / shift 会影响去畸变后的可视区域
     camera.set_scale_and_shift(scale, shift)
-    success = get_projection_map(camera, image, already_undistorted=args.already_undistorted)
+    success, und_image, proj_image = get_projection_map(
+        camera, image, already_undistorted=args.already_undistorted
+    )
     if success:
         # 成功后把投影矩阵写回对应 yaml
         print("saving projection matrix to yaml")
         camera.save_data()
+        result_dir = os.path.join(os.getcwd(), args.save_result_dir)
+        os.makedirs(result_dir, exist_ok=True)
+        und_path = os.path.join(result_dir, camera_name + "_undistorted.png")
+        proj_path = os.path.join(result_dir, camera_name + "_projected.png")
+        cv2.imwrite(und_path, und_image)
+        cv2.imwrite(proj_path, proj_image)
+        print("saved undistorted image to: {}".format(und_path))
+        print("saved projected image to: {}".format(proj_path))
     else:
         print("failed to compute the projection map")
 

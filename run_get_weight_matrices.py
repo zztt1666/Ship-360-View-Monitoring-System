@@ -23,6 +23,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--already_undistorted", action="store_true",
                         help="set true if input images are already undistorted")
+    parser.add_argument("--no_preview", action="store_true",
+                        help="save weights/masks without opening preview window")
     args = parser.parse_args()
 
     names = settings.camera_names
@@ -54,6 +56,11 @@ def main():
     birdview.make_luminance_balance().stitch_all_parts()
     birdview.make_white_balance()
     birdview.copy_car_image()
+    if args.no_preview:
+        Image.fromarray((Gmat * 255).astype(np.uint8)).save("weights.png")
+        Image.fromarray(Mmat.astype(np.uint8)).save("masks.png")
+        return
+
     ret = display_image("BirdView Result", birdview.image)
     if ret > 0:
         # 保存后续实时拼接要用到的资源文件

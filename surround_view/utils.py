@@ -119,7 +119,9 @@ def get_weight_mask_matrix(imA, imB, dist_threshold=5):
             distToA = cv2.pointPolygonTest(polyA, xy_tuple, True)
             distToB *= distToB
             distToA *= distToA
-            G[y, x] = distToB / (distToA + distToB)
+            denom = distToA + distToB
+            if denom > 1e-12:
+                G[y, x] = distToB / denom
 
     return G, overlapMask
 
